@@ -127,9 +127,8 @@ public class HtmlRender implements Render {
       String pathUrl = changedOperation.getPathUrl();
       String method = changedOperation.getHttpMethod().toString();
       String desc =
-          Optional.ofNullable(changedOperation.getSummary())
-              .map(ChangedMetadata::getRight)
-              .orElse("");
+            Optional.ofNullable(changedOperation.getNewOperation().getSummary())
+                .orElse("");
 
       ContainerTag ul_detail = ul().withClass("detail");
       if (result(changedOperation.getParameters()).isDifferent()) {
