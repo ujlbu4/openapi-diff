@@ -78,7 +78,8 @@ public class SchemaDiffResult {
               rightProperties.get(key),
               required(context, key, right.getRequired()))
           .ifPresent(
-              changedSchema1 -> changedSchema.getChangedProperties().put(key, changedSchema1));
+              changedSchema1 -> changedSchema.getChangedProperties().put(key, changedSchema1)
+          );
     }
 
     compareAdditionalProperties(refSet, left, right, context);

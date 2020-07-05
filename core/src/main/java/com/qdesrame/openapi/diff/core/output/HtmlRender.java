@@ -232,7 +232,7 @@ public class HtmlRender implements Render {
     ContainerTag li =
         li().with(div_changedSchema(request.getSchema()))
             .withText(String.format("Changed body: '%s'", name));
-    if (request.isIncompatible()) {
+    if (request.isCompatible() || request.isIncompatible()) {
       incompatibilities(li, request.getSchema());
     }
     return li;
@@ -240,7 +240,7 @@ public class HtmlRender implements Render {
 
   private ContainerTag div_changedSchema(ChangedSchema schema) {
     ContainerTag div = div();
-    div.with(h3("Schema" + (schema.isIncompatible() ? " incompatible" : "")));
+    div.with(h3("Schema" + (schema.isIncompatible() ? " incompatible" : schema.isCompatible() ? " compatible": "")));
     return div;
   }
 

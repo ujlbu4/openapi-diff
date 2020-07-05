@@ -29,8 +29,8 @@ public abstract class ReferenceDiffCache<C, D> {
       String leftRef,
       String rightRef,
       DiffContext context) {
-    boolean areBothRefParameters = leftRef != null && rightRef != null;
-    if (areBothRefParameters) {
+    boolean isAnyOrBothRefParameters = leftRef != null || rightRef != null;
+    if (isAnyOrBothRefParameters) {
       CacheKey key = new CacheKey(leftRef, rightRef, context);
       Optional<D> changedFromRef = getFromCache(key);
       if (changedFromRef.isPresent()) {
