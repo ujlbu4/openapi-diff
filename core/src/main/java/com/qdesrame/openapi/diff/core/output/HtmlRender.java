@@ -74,10 +74,10 @@ public class HtmlRender implements Render {
                         div()
                             .withClass("article")
                             .with(
-                                div().with(h2("What's New"), hr(), ol_new),
-                                div().with(h2("What's Deleted"), hr(), ol_miss),
-                                div().with(h2("What's Deprecated"), hr(), ol_deprec),
-                                div().with(h2("What's Changed"), hr(), ol_changed))));
+                                div().with(h2("New methods"), hr(), ol_new),
+                                div().with(h2("Deleted methods"), hr(), ol_miss),
+                                div().with(h2("Deprecated methods"), hr(), ol_deprec),
+                                div().with(h2("Changed methods"), hr(), ol_changed))));
 
     return document().render() + html.render();
   }
@@ -94,7 +94,10 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_newEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method)).withText(path + " ").with(span(desc));
+    return li()
+        .with(span(method).withClass(method))
+        .withText(path + " ")
+        .with(span(desc).withClass("comment"));
   }
 
   private ContainerTag ol_missingEndpoint(List<Endpoint> endpoints) {
@@ -109,7 +112,9 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_missingEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method), del().withText(path)).with(span(" " + desc));
+    return li()
+        .with(span(method).withClass(method), del().withText(path))
+        .with(span(" " + desc).withClass("comment"));
   }
 
   private ContainerTag ol_deprecatedEndpoint(List<Endpoint> endpoints) {
@@ -124,7 +129,9 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_deprecatedEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method), del().withText(path)).with(span(" " + desc));
+    return li()
+        .with(span(method).withClass(method), del().withText(path))
+        .with(span(" " + desc).withClass("comment"));
   }
 
   private ContainerTag ol_changed(List<ChangedOperation> changedOperations) {
@@ -156,7 +163,7 @@ public class HtmlRender implements Render {
       ol.with(
           li().with(span(method).withClass(method))
               .withText(pathUrl + " ")
-              .with(span(desc))
+              .with(span(desc).withClass("comment"))
               .with(ul_detail));
     }
     return ol;
