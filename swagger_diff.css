@@ -182,6 +182,10 @@ s, del, .missing, del.comment {
 	color: #C0C0C0;
 }
 
+.version {
+  padding-left: 30px;
+}
+
 /* Class for link show/hide article */ 
 .showhide {
     color: #3e373785;

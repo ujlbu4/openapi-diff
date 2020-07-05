@@ -43,6 +43,9 @@ public class HtmlRender implements Render {
   public String render(ChangedOpenApi diff) {
     this.diff = diff;
 
+    ChangedVersion changedVersion = diff.getChangedVersion();
+    ContainerTag ol_changedVersion = ol_changedVersion(changedVersion);
+    
     List<Endpoint> newEndpoints = diff.getNewEndpoints();
     ContainerTag ol_newEndpoint = ol_newEndpoint(newEndpoints);
 
@@ -55,11 +58,11 @@ public class HtmlRender implements Render {
     List<ChangedOperation> changedOperations = diff.getChangedOperations();
     ContainerTag ol_changed = ol_changed(changedOperations);
 
-    return renderHtml(ol_newEndpoint, ol_missingEndpoint, ol_deprecatedEndpoint, ol_changed);
+    return renderHtml(ol_changedVersion, ol_newEndpoint, ol_missingEndpoint, ol_deprecatedEndpoint, ol_changed);
   }
 
-  public String renderHtml(
-      ContainerTag ol_new, ContainerTag ol_miss, ContainerTag ol_deprec, ContainerTag ol_changed) {
+  public String renderHtml(ContainerTag ol_versions, ContainerTag ol_new, ContainerTag ol_miss,
+                           ContainerTag ol_deprec, ContainerTag ol_changed) {
     ContainerTag html =
         html()
             .attr("lang", "en")
@@ -75,6 +78,7 @@ public class HtmlRender implements Render {
                         div()
                             .withClass("article")
                             .with(
+                                div().with(h2("Versions"), hr(), ol_versions),
                                 div().with(h2("New methods"), hr(), ol_new),
                                 div().with(h2("Deleted methods"), hr(), ol_miss),
                                 div().with(h2("Deprecated methods"), hr(), ol_deprec),
@@ -83,6 +87,17 @@ public class HtmlRender implements Render {
     return document().render() + html.render();
   }
 
+  private ContainerTag ol_changedVersion(ChangedVersion changedVersion) {
+      if (null == changedVersion) return ol();
+      
+      ContainerTag ol = ol();
+      ol
+          .withText(String.format("Changed from %s to %s",
+                                changedVersion.getOldVersion(), changedVersion.getNewVersion()))
+          .withClass("version");
+      
+      return ol;
+  }
   private ContainerTag ol_newEndpoint(List<Endpoint> endpoints) {
     if (null == endpoints) return ol();
     ContainerTag ol = ol();

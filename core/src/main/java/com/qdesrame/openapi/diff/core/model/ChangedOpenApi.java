@@ -15,6 +15,7 @@ public class ChangedOpenApi implements ComposedChanged {
   private OpenAPI oldSpecOpenApi;
   private OpenAPI newSpecOpenApi;
 
+  private ChangedVersion changedVersion;
   private List<Endpoint> newEndpoints;
   private List<Endpoint> missingEndpoints;
   private List<ChangedOperation> changedOperations;

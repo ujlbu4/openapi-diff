@@ -2,12 +2,7 @@ package com.qdesrame.openapi.diff.core.compare;
 
 import static com.qdesrame.openapi.diff.core.compare.PathsDiff.valOrEmpty;
 
-import com.qdesrame.openapi.diff.core.model.ChangedExtensions;
-import com.qdesrame.openapi.diff.core.model.ChangedOpenApi;
-import com.qdesrame.openapi.diff.core.model.ChangedOperation;
-import com.qdesrame.openapi.diff.core.model.ChangedPath;
-import com.qdesrame.openapi.diff.core.model.ChangedPaths;
-import com.qdesrame.openapi.diff.core.model.Endpoint;
+import com.qdesrame.openapi.diff.core.model.*;
 import com.qdesrame.openapi.diff.core.utils.EndpointUtils;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.PathItem;
@@ -50,6 +45,7 @@ public class OpenApiDiff {
 
   private final OpenAPI oldSpecOpenApi;
   private final OpenAPI newSpecOpenApi;
+  private ChangedVersion changedVersion;
   private List<Endpoint> newEndpoints;
   private List<Endpoint> missingEndpoints;
   private List<ChangedOperation> changedOperations;
@@ -97,6 +93,10 @@ public class OpenApiDiff {
   private ChangedOpenApi compare() {
     preProcess(oldSpecOpenApi);
     preProcess(newSpecOpenApi);
+    
+    this.changedVersion = new ChangedVersion(oldSpecOpenApi.getInfo().getVersion(),
+                                             newSpecOpenApi.getInfo().getVersion());
+    
     Optional<ChangedPaths> paths =
         this.pathsDiff.diff(
             valOrEmpty(oldSpecOpenApi.getPaths()), valOrEmpty(newSpecOpenApi.getPaths()));
@@ -164,6 +164,7 @@ public class OpenApiDiff {
 
   private ChangedOpenApi getChangedOpenApi() {
     return new ChangedOpenApi()
+        .setChangedVersion(changedVersion)
         .setMissingEndpoints(missingEndpoints)
         .setNewEndpoints(newEndpoints)
         .setNewSpecOpenApi(newSpecOpenApi)
