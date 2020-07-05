@@ -27,6 +27,7 @@ public class HtmlRender implements Render {
       CHANGED,
       INCREASED,
       MISSING,
+      NO_CHANGE,
   }
 
   public HtmlRender() {
@@ -261,6 +262,11 @@ public class HtmlRender implements Render {
 
   private void incompatibilities(
       final ContainerTag output, String propName, final ChangedSchema schema) {
+    
+    if (schema.getRequired() != null) {
+      required(output, ClassType.INCREASED, "New required properties", schema.getRequired().getIncreased());
+      required(output, ClassType.MISSING,"Properties deleted from required", schema.getRequired().getMissing());
+    }
     if (schema.getItems() != null) {
       items(output, propName, schema.getItems());
     }
@@ -291,6 +297,13 @@ public class HtmlRender implements Render {
         );
   }
   
+  private void required(ContainerTag output, ClassType classType, String title, List<String> required) {
+      if (required.size() > 0) {
+          ContainerTag innerTag = ul();
+          output.with(li(title).with(innerTag));
+          listItem(innerTag, classType, "", required);
+      }
+  }
   private void listDiffs(ContainerTag output, String captionCategory, ChangedList<?> listDiff) {
       if (listDiff == null || listDiff.isItemsChanged() == DiffResult.NO_CHANGES) {
           return;
@@ -298,15 +311,15 @@ public class HtmlRender implements Render {
       ContainerTag innerTag = ul();
       output
           .with(li(captionCategory).with(innerTag));
-      listItem(innerTag, ClassType.INCREASED, "Added", listDiff.getIncreased());
-      listItem(innerTag, ClassType.MISSING, "Deleted", listDiff.getMissing());
+      listItem(innerTag, ClassType.INCREASED, "Added: ", listDiff.getIncreased());
+      listItem(innerTag, ClassType.MISSING, "Deleted: ", listDiff.getMissing());
   }
   
   private <T> void listItem(ContainerTag output, ClassType classType, String name, List<T> list) {
       if (!list.isEmpty()) {
           list.forEach(
               value -> {
-                  ContainerTag propertyTag = li(String.format("%s: %s", name, value));
+                  ContainerTag propertyTag = li(String.format("%s%s", name, value));
     
                   switch (classType){
                       case MISSING:
@@ -315,6 +328,8 @@ public class HtmlRender implements Render {
                       case INCREASED:
                           propertyTag.withClass("increased");
                           break;
+                      case CHANGED:
+                          propertyTag.withClass("changed");
                       default:
                           break;
                   }
