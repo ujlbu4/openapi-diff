@@ -30,7 +30,8 @@ public class HtmlRender implements Render {
   }
 
   public HtmlRender() {
-    this("Api Change Log", "http://deepoove.com/swagger-diff/stylesheets/demo.css");
+    //this("Api Change Log", "http://deepoove.com/swagger-diff/stylesheets/demo.css");
+      this("Api Change Log", "swagger_diff.css");
   }
 
   public HtmlRender(String title, String linkCss) {
