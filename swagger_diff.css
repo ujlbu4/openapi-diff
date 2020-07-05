@@ -169,6 +169,10 @@ s, del, .missing, del.comment {
 	color: #F44336;
 }
 
+.changed {
+	color: #FFC300;
+}
+
 .increased {
 	color: #95B600;
 }

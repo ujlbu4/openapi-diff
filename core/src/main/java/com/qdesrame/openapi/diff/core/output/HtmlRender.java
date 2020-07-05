@@ -272,7 +272,14 @@ public class HtmlRender implements Render {
                schema.getMissingProperties(), schema.getContext());
     schema
         .getChangedProperties()
-        .forEach((name, property) -> incompatibilities(output, prefix + name, property));
+        .forEach(
+            (name, property) -> {
+                output
+                    .with(p(String.format("%s: %s", "Changed property", prefix + name))
+                              .withClass("changed"));
+                incompatibilities(output, prefix + name, property);
+            }
+        );
   }
 
   private void items(ContainerTag output, String propName, ChangedSchema schema) {
