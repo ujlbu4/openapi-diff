@@ -273,6 +273,9 @@ public class HtmlRender implements Render {
                schema.getIncreasedProperties(), schema.getContext());
     properties(output, ClassType.MISSING, prefix, "Deleted property",
                schema.getMissingProperties(), schema.getContext());
+    
+    listDiffs(output,"Updated enum values", schema.getEnumeration());
+    
     schema
         .getChangedProperties()
         .forEach(
@@ -286,6 +289,40 @@ public class HtmlRender implements Render {
                 incompatibilities(innerTag, prefix + name, property);
             }
         );
+  }
+  
+  private void listDiffs(ContainerTag output, String captionCategory, ChangedList<?> listDiff) {
+      if (listDiff == null || listDiff.isItemsChanged() == DiffResult.NO_CHANGES) {
+          return;
+      }
+      ContainerTag innerTag = ul();
+      output
+          .with(li(captionCategory).with(innerTag));
+      listItem(innerTag, ClassType.INCREASED, "Added", listDiff.getIncreased());
+      listItem(innerTag, ClassType.MISSING, "Deleted", listDiff.getMissing());
+  }
+  
+  private <T> void listItem(ContainerTag output, ClassType classType, String name, List<T> list) {
+      if (!list.isEmpty()) {
+          list.forEach(
+              value -> {
+                  ContainerTag propertyTag = li(String.format("%s: %s", name, value));
+    
+                  switch (classType){
+                      case MISSING:
+                          propertyTag.withClass("missing");
+                          break;
+                      case INCREASED:
+                          propertyTag.withClass("increased");
+                          break;
+                      default:
+                          break;
+                  }
+                  
+                  output.with(propertyTag);
+              }
+          );
+      }
   }
 
   private void items(ContainerTag output, String propName, ChangedSchema schema) {
