@@ -22,6 +22,12 @@ public class HtmlRender implements Render {
   private String linkCss;
   protected static RefPointer<Schema> refPointer = new RefPointer<>(RefType.SCHEMAS);
   protected ChangedOpenApi diff;
+  
+  private enum ClassType {
+      CHANGED,
+      INCREASED,
+      MISSING,
+  }
 
   public HtmlRender() {
     this("Api Change Log", "http://deepoove.com/swagger-diff/stylesheets/demo.css");
@@ -143,7 +149,8 @@ public class HtmlRender implements Render {
       }
       if (changedOperation.resultApiResponses().isDifferent()) {
         ul_detail.with(
-            li().with(h3("Response")).with(ul_response(changedOperation.getApiResponses())));
+            li().with(h3("Response"))
+                .with(ul_response(changedOperation.getApiResponses())));
       }
       ol.with(
           li().with(span(method).withClass(method))
@@ -186,7 +193,8 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_changedResponse(String name, ChangedResponse response) {
-    return li().withText(String.format("Changed response : [%s]", name))
+    return li()
+        .withText(String.format("Changed response : [%s]", name))
         .with(
             span((null == response.getNewApiResponse()
                         || null == response.getNewApiResponse().getDescription())
@@ -247,11 +255,13 @@ public class HtmlRender implements Render {
     }
     if (schema.isCoreChanged() == DiffResult.INCOMPATIBLE && schema.isChangedType()) {
       String type = type(schema.getOldSchema()) + " -> " + type(schema.getNewSchema());
-      property(output, propName, "Changed property type", type);
+      property(output, ClassType.CHANGED, propName, "Changed property type", type);
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
-    properties(
-        output, prefix, "Missing property", schema.getMissingProperties(), schema.getContext());
+    properties(output, ClassType.INCREASED, prefix, "Added property",
+               schema.getIncreasedProperties(), schema.getContext());
+    properties(output, ClassType.MISSING, prefix, "Deleted property",
+               schema.getMissingProperties(), schema.getContext());
     schema
         .getChangedProperties()
         .forEach((name, property) -> incompatibilities(output, prefix + name, property));
@@ -263,30 +273,45 @@ public class HtmlRender implements Render {
 
   private void properties(
       ContainerTag output,
+      ClassType classType,
       String propPrefix,
       String title,
       Map<String, Schema> properties,
       DiffContext context) {
     if (properties != null) {
-      properties.forEach((key, value) -> resolveProperty(output, propPrefix, key, value, title));
+      properties.forEach(
+          (key, value) -> resolveProperty(output, classType, propPrefix, key, value, title)
+      );
     }
   }
 
   private void resolveProperty(
-      ContainerTag output, String propPrefix, String key, Schema value, String title) {
+      ContainerTag output, ClassType classType, String propPrefix, String key, Schema value, String title) {
     try {
-      property(output, propPrefix + key, title, resolve(value));
+      property(output, classType, propPrefix + key, title, resolve(value));
     } catch (Exception e) {
-      property(output, propPrefix + key, title, type(value));
+      property(output, classType, propPrefix + key, title, type(value));
     }
   }
 
-  protected void property(ContainerTag output, String name, String title, Schema schema) {
-    property(output, name, title, type(schema));
+  protected void property(ContainerTag output, ClassType classType, String name, String title, Schema schema) {
+    property(output, classType, name, title, type(schema));
   }
 
-  protected void property(ContainerTag output, String name, String title, String type) {
-    output.with(p(String.format("%s: %s (%s)", title, name, type)).withClass("missing"));
+  protected void property(ContainerTag output, ClassType classType, String name, String title, String type) {
+    ContainerTag propertyTag = p(String.format("%s: %s (%s)", title, name, type));
+    
+    switch (classType){
+        case MISSING:
+            propertyTag.withClass("missing");
+            break;
+        case INCREASED:
+            propertyTag.withClass("increased");
+            break;
+        default:
+            break;
+    }
+    output.with(propertyTag);
   }
 
   protected Schema resolve(Schema schema) {
