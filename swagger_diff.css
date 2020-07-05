@@ -156,7 +156,7 @@ ul>li {
 }
 
 .comment {
-	color: #d8fa3c;
+	color: #C0C0C0;
 	margin-left: 16px;
 	font-size: 14px;
 }
@@ -175,7 +175,7 @@ s, del, .missing, del.comment {
 
 
 .missing>.comment {
-	color: #F44336;
+	color: #C0C0C0;
 }
 
 /* Class for link show/hide article */ 
