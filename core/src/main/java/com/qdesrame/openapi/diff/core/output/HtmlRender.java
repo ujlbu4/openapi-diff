@@ -255,7 +255,7 @@ public class HtmlRender implements Render {
     }
     if (schema.isCoreChanged() == DiffResult.INCOMPATIBLE && schema.isChangedType()) {
       String type = type(schema.getOldSchema()) + " -> " + type(schema.getNewSchema());
-      property(output, ClassType.CHANGED, propName, "Changed property type", type);
+      property(output, ClassType.CHANGED, propName, "Changed property type", type, "");
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
     properties(output, ClassType.INCREASED, prefix, "Added property",
@@ -278,7 +278,7 @@ public class HtmlRender implements Render {
       String title,
       Map<String, Schema> properties,
       DiffContext context) {
-    if (properties != null) {
+    if (!properties.isEmpty()) {
       properties.forEach(
           (key, value) -> resolveProperty(output, classType, propPrefix, key, value, title)
       );
@@ -290,17 +290,22 @@ public class HtmlRender implements Render {
     try {
       property(output, classType, propPrefix + key, title, resolve(value));
     } catch (Exception e) {
-      property(output, classType, propPrefix + key, title, type(value));
+      property(output, classType, propPrefix + key, title, type(value), "");
     }
   }
 
   protected void property(ContainerTag output, ClassType classType, String name, String title, Schema schema) {
-    property(output, classType, name, title, type(schema));
+    property(output, classType, name, title, type(schema), schema.getDescription());
   }
 
-  protected void property(ContainerTag output, ClassType classType, String name, String title, String type) {
-    ContainerTag propertyTag = p(String.format("%s: %s (%s)", title, name, type));
+  protected void property(ContainerTag output, ClassType classType, String name, String title, String valueType,
+                          String description) {
+    ContainerTag propertyTag = p(String.format("%s: %s (%s)", title, name, valueType));
     
+    if (description != null && !description.isEmpty()) {
+      propertyTag.with(span("//" + description).withClass("comment"));
+    }
+
     switch (classType){
         case MISSING:
             propertyTag.withClass("missing");
