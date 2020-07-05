@@ -237,11 +237,14 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_changedRequest(String name, ChangedMediaType request) {
+    ContainerTag innerBlock = ul();
     ContainerTag li =
         li().with(div_changedSchema(request.getSchema()))
-            .withText(String.format("Changed body: '%s'", name));
+            .with(ul().withClass("change xxx")
+                      .with(li(String.format("Changed content type: '%s'", name))
+                                .with(innerBlock)));
     if (request.isCompatible() || request.isIncompatible()) {
-      incompatibilities(li, request.getSchema());
+      incompatibilities(innerBlock, request.getSchema());
     }
     return li;
   }
@@ -274,10 +277,13 @@ public class HtmlRender implements Render {
         .getChangedProperties()
         .forEach(
             (name, property) -> {
+                ContainerTag innerTag = ul();
                 output
-                    .with(p(String.format("%s: %s", "Changed property", prefix + name))
-                              .withClass("changed"));
-                incompatibilities(output, prefix + name, property);
+                    //.withClass("change yyy")
+                    .with(li(String.format("%s: %s", "Changed property", prefix + name))
+                              .withClass("changed")
+                              .with(innerTag));
+                incompatibilities(innerTag, prefix + name, property);
             }
         );
   }
@@ -315,7 +321,7 @@ public class HtmlRender implements Render {
 
   protected void property(ContainerTag output, ClassType classType, String name, String title, String valueType,
                           String description) {
-    ContainerTag propertyTag = p(String.format("%s: %s (%s)", title, name, valueType));
+    ContainerTag propertyTag = li(String.format("%s: %s (%s)", title, name, valueType));
     
     if (description != null && !description.isEmpty()) {
       propertyTag.with(span("//" + description).withClass("comment"));
