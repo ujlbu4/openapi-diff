@@ -37,8 +37,16 @@ public class SchemaDiffResult {
       V left,
       V right,
       DiffContext context) {
-    ChangedEnum<X> changedEnum =
-        ListDiff.diff(new ChangedEnum<>(left.getEnum(), right.getEnum(), context));
+      
+    if (left == null) {
+        // it's tedious to write everywhere: left == null ? null : left.getXXX()
+        left = (V)new Schema<X>();
+    }
+    if (right == null) {
+        right = (V)new Schema<X>();
+    }
+    ChangedEnum<X> changedEnum = ListDiff
+        .diff(new ChangedEnum<>(left.getEnum(), right.getEnum(), context));
     changedSchema
         .setContext(context)
         .setOldSchema(left)
