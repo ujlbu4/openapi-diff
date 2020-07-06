@@ -46,7 +46,8 @@ build:
       when: never
     - if: $CI_COMMIT_BRANCH == 'master' && $CI_COMMIT_TITLE =~ /^RELEASE:.+$/
       when: never
-
+    - when: on_success
+    
 tests:
   image: ${REGISTRY_DOCKER_RELEASE}/ci-images/docker-compose
   stage: test
@@ -83,6 +84,7 @@ release:
   variables:
     IMAGE_NAME: 'override-me' # will override at upper level
     compose_build_target: final
+    push_latest: "false"
   before_script:
     - *extract_version
   script:
@@ -91,6 +93,11 @@ release:
     - docker-compose -f deployment/docker-compose.yml build
     # push
     - docker-compose -f deployment/docker-compose.yml push
+
+    - if [ "$push_latest" == "true" ] ; then
+        docker tag ${IMAGE_NAME}:${version} ${IMAGE_NAME}:latest;
+        docker push ${IMAGE_NAME}:latest;
+      fi
 
 publish dev:
   extends: .push_image
@@ -107,5 +114,6 @@ publish stable:
   variables:
     nuget_repository: ${REGISTRY_NUGET_RELEASE_URL}
     IMAGE_NAME: ${REGISTRY_DOCKER_RELEASE_NOSCHEME}/${project_slug}
+    push_latest: "true"
   rules:
     - if: $CI_COMMIT_TAG
