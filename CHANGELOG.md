@@ -1,3 +1,10 @@
+### [1.3.2](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.3.1...1.3.2) (2020-07-06)
+
+
+### Bug Fixes
+
+* fake release ([b7df673](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/b7df673f87941bb0736e27459abd292f3f4b7a40))
+
 ### [1.3.1](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.3.0...1.3.1) (2020-07-06)
 
 
