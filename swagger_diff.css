@@ -186,6 +186,14 @@ s, del, .missing, del.comment {
   padding-left: 30px;
 }
 
+.incompatible {
+  background-color: #ce3b30;
+}
+
+.compatible {
+  background-color: #008000;
+}
+
 /* Class for link show/hide article */ 
 .showhide {
     color: #3e373785;

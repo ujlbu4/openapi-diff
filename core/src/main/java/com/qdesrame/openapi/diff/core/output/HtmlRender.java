@@ -267,7 +267,19 @@ public class HtmlRender implements Render {
 
   private ContainerTag div_changedSchema(ChangedSchema schema) {
     ContainerTag div = div();
-    div.with(h3("Schema" + (schema.isIncompatible() ? " incompatible" : schema.isCompatible() ? " compatible": "")));
+    ContainerTag schemaTag = h3();
+    
+    if (schema.isIncompatible()) {
+        schemaTag.withText("Schema incompatible").withClass("incompatible");
+      }
+    else if (schema.isCompatible()) {
+        schemaTag.withText("Schema compatible").withClass("compatible");
+    }
+    else {
+        schemaTag.withText("Compatibility Unknown").withClass("compatibility-unknown");
+    }
+    div.with(schemaTag);
+    
     return div;
   }
 
