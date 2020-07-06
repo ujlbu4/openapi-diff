@@ -1,3 +1,10 @@
+### [1.4.1](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.4.0...1.4.1) (2020-07-06)
+
+
+### Bug Fixes
+
+* make swagger_diff.css jar agnostic ([16b018e](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/16b018e9f3ecbecdfc44eed81834b958a3cc6253))
+
 ## [1.4.0](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.3.2...1.4.0) (2020-07-06)
 
 
