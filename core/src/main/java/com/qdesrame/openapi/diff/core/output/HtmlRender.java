@@ -14,11 +14,13 @@ import io.swagger.v3.oas.models.responses.ApiResponse;
 import j2html.TagCreator;
 import j2html.tags.ContainerTag;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -517,10 +519,14 @@ public class HtmlRender implements Render {
   }
     
     private static String readFileToString(String fileName) {
-        File file = new File(fileName);
-        logger.debug("Output file: {}", file.getAbsolutePath());
+        logger.debug("Read file: {}", fileName);
         try {
-            return FileUtils.readFileToString(file);
+            // https://stackoverflow.com/questions/20389255/reading-a-resource-file-from-within-jar
+            // As long as the file.txt resource is available on the classpath then this approach will work
+            // the same way regardless of whether the file.txt resource is in a classes/ directory
+            // or inside a jar
+            InputStream in = HtmlRender.class.getClassLoader().getResourceAsStream(fileName);
+            return IOUtils.toString(in);
         } catch (IOException e) {
             logger.error("Impossible to read file {}", fileName, e);
             return "";
