@@ -11,13 +11,21 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import j2html.TagCreator;
 import j2html.tags.ContainerTag;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class HtmlRender implements Render {
-
+  static final Logger logger = LoggerFactory.getLogger(HtmlRender.class);
+  
   private String title;
   private String linkCss;
   protected static RefPointer<Schema> refPointer = new RefPointer<>(RefType.SCHEMAS);
@@ -71,7 +79,9 @@ public class HtmlRender implements Render {
                     .with(
                         meta().withCharset("utf-8"),
                         title(title),
-                        link().withRel("stylesheet").withHref(linkCss)),
+                        //link().withRel("stylesheet").withHref(linkCss)
+                        style(TagCreator.rawHtml(readFileToString(linkCss))).withType("text/css")
+                    ),
                 body()
                     .with(
                         header().with(h1(title)),
@@ -505,4 +515,15 @@ public class HtmlRender implements Render {
     }
     return li;
   }
+    
+    private static String readFileToString(String fileName) {
+        File file = new File(fileName);
+        logger.debug("Output file: {}", file.getAbsolutePath());
+        try {
+            return FileUtils.readFileToString(file);
+        } catch (IOException e) {
+            logger.error("Impossible to read file {}", fileName, e);
+            return "";
+        }
+    }
 }
