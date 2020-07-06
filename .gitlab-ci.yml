@@ -1,0 +1,106 @@
+default:
+  services:
+    - docker:dind
+  tags: ['backend']
+
+include:
+  - project: fura/misc/ops
+    ref: master
+    file: cicd-includes/global-default-variables.yml
+  - project: fura/misc/ops
+    ref: master
+    file: cicd-includes/semantic-release.yml
+
+variables:
+  project_slug: openapi-diff
+  version: default-local # we need some value for local images, at publish stage it will be correct one
+  SEMANTIC_RELEASE_PACKAGE: openapi-diff
+
+stages:
+  - build
+  - test
+  - release
+  - publish
+
+### TEMPLATES
+.anchors:
+  - &extract_version |
+    export version=$(cat version)-$CI_PIPELINE_ID-$CI_COMMIT_REF_SLUG;
+    if [[ -z "$CI_COMMIT_TAG"  ]]; then 
+      export version=$version; 
+    else export version=$CI_COMMIT_TAG; 
+    fi
+    echo "======= version ======="; echo $version; echo "======================="
+
+# STEAGES
+build:
+  image: ${REGISTRY_DOCKER_RELEASE}/ci-images/docker-compose
+  stage: build
+  variables:
+    IMAGE_NAME: local_build_${project_slug}-${CI_JOB_ID}
+    compose_build_target: build
+  script:
+    - docker-compose -f deployment/docker-compose.yml build
+
+tests:
+  image: ${REGISTRY_DOCKER_RELEASE}/ci-images/docker-compose
+  stage: test
+  variables:
+    IMAGE_NAME: local_test_${project_slug}-${CI_JOB_ID}
+    compose_build_target: test
+  script:
+    - env
+    - docker-compose -p "test-${project_slug}"
+                     -f deployment/docker-compose.yml
+                     run --rm openapi-diff
+  # coverage: /Line coverage[\s\S].+%/
+  # artifacts:
+  #   paths:
+  #     - $TEST_REPORTS
+  #   reports:
+  #     junit: $TEST_REPORTS/junit-report.xml
+  #     cobertura: $TEST_REPORTS/coverage.cobertura.xml
+  #   when: always
+  allow_failure: true # need to fix tests which is not pass
+  rules:
+    - if: $CI_COMMIT_BRANCH && $CI_COMMIT_TITLE !~ /^RELEASE:.+$/
+
+release:
+  extends: .semantic release # from included templates
+  stage: release
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'master' && $CI_COMMIT_TITLE !~ /^RELEASE:.+$/
+      when: on_success
+
+.push_image:
+  image: ${REGISTRY_DOCKER_RELEASE}/ci-images/docker-compose
+  stage: publish
+  variables:
+    IMAGE_NAME: 'override-me' # will override at upper level
+    compose_build_target: final
+  before_script:
+    - *extract_version
+  script:
+    # build нужен для того чтобы собраться непосредственно такой IMAGE_NAME
+    # при сборке все предыдущии слои должны взяться из кэша (кэш построиться во время build stage'а)
+    - docker-compose -f deployment/docker-compose.yml build
+    # push
+    - docker-compose -f deployment/docker-compose.yml push
+
+publish dev:
+  extends: .push_image
+  variables:
+    nuget_repository: ${REGISTRY_NUGET_SNAPSHOT_URL}
+    IMAGE_NAME: ${REGISTRY_DOCKER_SNAPSHOT_NOSCHEME}/${project_slug}
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: never
+    - if: $CI_COMMIT_BRANCH != 'master' && $CI_COMMIT_TAG == null
+
+publish stable:
+  extends: .push_image
+  variables:
+    nuget_repository: ${REGISTRY_NUGET_RELEASE_URL}
+    IMAGE_NAME: ${REGISTRY_DOCKER_RELEASE_NOSCHEME}/${project_slug}
+  rules:
+    - if: $CI_COMMIT_TAG

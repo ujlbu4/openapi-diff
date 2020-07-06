@@ -1,0 +1,66 @@
+branches: ['master']
+ci: true
+debug: true
+dryRun: false
+tagFormat: '${version}'
+
+# Global plugin options (will be passed to all plugins)
+preset: 'conventionalcommits'
+gitlabUrl: 'http://gitlab.int.gofura.com/'
+slackWebhook: 'https://hooks.slack.com/services/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'
+
+# Responsible for verifying conditions necessary to proceed with the release:
+# configuration is correct, authentication token are valid, etc...
+verifyConditions:
+  - '@semantic-release/changelog'
+  - '@semantic-release/git'
+  - '@semantic-release/gitlab'
+  - 'semantic-release-slack-bot'
+
+# Responsible for determining the type of the next release (major, minor or patch).
+# If multiple plugins with a analyzeCommits step are defined, the release type will be
+# the highest one among plugins output.
+# Look details at: https://github.com/semantic-release/commit-analyzer#configuration
+analyzeCommits:
+  - path: '@semantic-release/commit-analyzer'
+
+# Responsible for generating the content of the release note.
+# If multiple plugins with a generateNotes step are defined,
+# the release notes will be the result of the concatenation of each plugin output.
+generateNotes:
+  - path: '@semantic-release/release-notes-generator'
+    writerOpts:
+      groupBy: 'type'
+      commitGroupsSort: 'title'
+      commitsSort: 'header'
+    linkCompare: true
+    linkReferences: true
+    parserOpts:
+      # detect JIRA issues in merge commits
+      issuePrefixes: ['FB-', 'DEV-', 'ADM-', 'ERP-', 'HB-', 'LB-', 'MOB-', 'TR-', 'SADM-', 'SERP-', 'SHB-', 'SLOAD-', 'SM-', 'ST-']
+      mergePattern: "^Merge branch '(.*)' into (.*)$"
+      mergeCorrespondence: ['branch_src', 'branch_dst']
+
+# Responsible for preparing the release, for example creating or updating files
+# such as package.json, CHANGELOG.md, documentation or compiled assets
+# and pushing a commit.
+prepare:
+  - path: '@semantic-release/exec'
+    cmd: './deployment/version-plaintext-set.sh ${nextRelease.version}'
+  - path: '@semantic-release/changelog'
+  - path: '@semantic-release/git'
+    message: 'RELEASE: ${nextRelease.version}'
+    assets: ['CHANGELOG.md', 'version']
+
+# Responsible for publishing the release.
+publish:
+  - path: '@semantic-release/gitlab'
+
+success:
+  - path: 'semantic-release-slack-bot'
+    notifyOnSuccess: true
+    markdownReleaseNotes: true
+
+fail:
+  - path: 'semantic-release-slack-bot'
+    notifyOnFail: true

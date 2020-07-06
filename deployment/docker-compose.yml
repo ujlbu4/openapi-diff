@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  openapi-diff:
+    image: ${IMAGE_NAME}:${version}
+    container_name: ${env:-dev}-${project_slug}
+    build:
+      context: ..
+      dockerfile: ./deployment/Dockerfile
+      target: ${compose_build_target}
+    volumes:
+      - ./artifacts:/build/output:rw
