@@ -33,13 +33,13 @@ generateNotes:
       groupBy: 'type'
       commitGroupsSort: 'title'
       commitsSort: 'header'
-    linkCompare: true
-    linkReferences: true
-    parserOpts:
-      # detect JIRA issues in merge commits
-      issuePrefixes: ['FB-', 'DEV-', 'ADM-', 'ERP-', 'HB-', 'LB-', 'MOB-', 'TR-', 'SADM-', 'SERP-', 'SHB-', 'SLOAD-', 'SM-', 'ST-']
-      mergePattern: "^Merge branch '(.*)' into (.*)$"
-      mergeCorrespondence: ['branch_src', 'branch_dst']
+    # linkCompare: true
+    # linkReferences: true
+    # parserOpts:
+    #   # detect JIRA issues in merge commits
+    #   issuePrefixes: ['FB-', 'DEV-', 'ADM-', 'ERP-', 'HB-', 'LB-', 'MOB-', 'TR-', 'SADM-', 'SERP-', 'SHB-', 'SLOAD-', 'SM-', 'ST-']
+    #   mergePattern: "^Merge branch '(.*)' into (.*)$"
+    #   mergeCorrespondence: ['branch_src', 'branch_dst']
 
 # Responsible for preparing the release, for example creating or updating files
 # such as package.json, CHANGELOG.md, documentation or compiled assets
