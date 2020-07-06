@@ -1,3 +1,10 @@
+## [1.4.0](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.3.2...1.4.0) (2020-07-06)
+
+
+### Features
+
+* **html:** inject css into single html ([8f7035f](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/8f7035fa21ca39e256d4b427ffd8f9bf883d60f0))
+
 ### [1.3.2](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.3.1...1.3.2) (2020-07-06)
 
 
