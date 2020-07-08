@@ -1,3 +1,10 @@
+## [1.5.0](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.4.1...1.5.0) (2020-07-08)
+
+
+### Features
+
+* dont create output file if result is unchanged ([e59ed4d](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/e59ed4d4d4afccecb32e1d7a7be373becb8c49fc))
+
 ### [1.4.1](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.4.0...1.4.1) (2020-07-06)
 
 
