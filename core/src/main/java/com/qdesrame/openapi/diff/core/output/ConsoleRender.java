@@ -27,7 +27,9 @@ public class ConsoleRender implements Render {
     this.diff = diff;
     output = new StringBuilder();
     if (diff.isUnchanged()) {
-      output.append("No differences. Specifications are equivalents");
+      output.append("===============\n"+
+                        "No differences. Specifications are equivalent\n"+
+                        "===============");
     } else {
       output
           .append(bigTitle("Api Change Log"))
