@@ -311,13 +311,13 @@ public class HtmlRender implements Render {
     }
     if (schema.isCoreChanged() == DiffResult.INCOMPATIBLE && schema.isChangedType()) {
       String type = type(schema.getOldSchema()) + " -> " + type(schema.getNewSchema());
-      property(output, ClassType.CHANGED, propName, "Changed property type: ", type, "");
+      property(output, ClassType.CHANGED, propName, "Changed property type: ", type, null,"");
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
     properties(output, ClassType.INCREASED, prefix, "Added property: ",
-               schema.getIncreasedProperties(), schema.getContext());
+               schema.getIncreasedProperties(), schema.getRequired().getIncreased(), schema.getContext());
     properties(output, ClassType.MISSING, prefix, "Deleted property: ",
-               schema.getMissingProperties(), schema.getContext());
+               schema.getMissingProperties(), schema.getRequired().getMissing(), schema.getContext());
     
     listDiffs(output,"Updated enum values", schema.getEnumeration());
     
@@ -389,39 +389,52 @@ public class HtmlRender implements Render {
       String propPrefix,
       String title,
       Map<String, Schema> properties,
+      List<String> requiredProperties,
       DiffContext context) {
     if (!properties.isEmpty()) {
       properties.forEach(
-          (key, value) -> resolveProperty(output, classType, propPrefix, key, value, title)
+          (key, value) -> {
+              Boolean isRequired = requiredProperties.contains(key);
+              resolveProperty(output, classType, propPrefix, key, value, title,
+                              isRequired);
+          }
       );
     }
   }
 
   private void resolveProperty(
-      ContainerTag output, ClassType classType, String propPrefix, String key, Schema value, String title) {
+      ContainerTag output, ClassType classType, String propPrefix, String key, Schema value, String title,
+      Boolean isRequired) {
     try {
-      property(output, classType, propPrefix + key, title, resolve(value));
+      property(output, classType, propPrefix + key, title, isRequired, resolve(value));
     } catch (Exception e) {
-      property(output, classType, propPrefix + key, title, type(value), "");
+      property(output, classType, propPrefix + key, title, type(value), isRequired,"");
     }
   }
 
-  protected void property(ContainerTag output, ClassType classType, String name, String title, Schema schema) {
+  protected void property(ContainerTag output, ClassType classType, String name, String title,
+                          Boolean isRequired, Schema schema) {
     ContainerTag propertyTag = li();
     output.with(propertyTag);
-    property(propertyTag, classType, name, title, type(schema), schema.getDescription());
+    property(propertyTag, classType, name, title, type(schema), isRequired, schema.getDescription());
     
     if (schema.getProperties() != null && !schema.getProperties().isEmpty()) {
         ContainerTag innerTag = ul();
         propertyTag.with(innerTag);
-        properties(innerTag, classType, "", "", schema.getProperties(), null);
+        properties(innerTag, classType, "", "", schema.getProperties(),
+                   schema.getRequired(),null);
     }
   }
 
   protected void property(ContainerTag output, ClassType classType, String name, String title, String valueType,
-                          String description) {
+                          Boolean isRequired, String description) {
     output.withText(String.format("%s%s (%s)", title, name, valueType));
     
+    if (isRequired == Boolean.TRUE) {
+        output.with(span("[required]").withClass("required-property"));
+    } else if (isRequired == Boolean.FALSE) {
+        output.with(span("[optional]").withClass("optional-property"));
+    }
     if (description != null && !description.isEmpty()) {
         output.with(span("//" + description).withClass("comment"));
     }
