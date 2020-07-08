@@ -311,12 +311,12 @@ public class HtmlRender implements Render {
     }
     if (schema.isCoreChanged() == DiffResult.INCOMPATIBLE && schema.isChangedType()) {
       String type = type(schema.getOldSchema()) + " -> " + type(schema.getNewSchema());
-      property(output, ClassType.CHANGED, propName, "Changed property type", type, "");
+      property(output, ClassType.CHANGED, propName, "Changed property type: ", type, "");
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
-    properties(output, ClassType.INCREASED, prefix, "Added property",
+    properties(output, ClassType.INCREASED, prefix, "Added property: ",
                schema.getIncreasedProperties(), schema.getContext());
-    properties(output, ClassType.MISSING, prefix, "Deleted property",
+    properties(output, ClassType.MISSING, prefix, "Deleted property: ",
                schema.getMissingProperties(), schema.getContext());
     
     listDiffs(output,"Updated enum values", schema.getEnumeration());
@@ -407,28 +407,35 @@ public class HtmlRender implements Render {
   }
 
   protected void property(ContainerTag output, ClassType classType, String name, String title, Schema schema) {
-    property(output, classType, name, title, type(schema), schema.getDescription());
+    ContainerTag propertyTag = li();
+    output.with(propertyTag);
+    property(propertyTag, classType, name, title, type(schema), schema.getDescription());
+    
+    if (schema.getProperties() != null && !schema.getProperties().isEmpty()) {
+        ContainerTag innerTag = ul();
+        propertyTag.with(innerTag);
+        properties(innerTag, classType, "", "", schema.getProperties(), null);
+    }
   }
 
   protected void property(ContainerTag output, ClassType classType, String name, String title, String valueType,
                           String description) {
-    ContainerTag propertyTag = li(String.format("%s: %s (%s)", title, name, valueType));
+    output.withText(String.format("%s%s (%s)", title, name, valueType));
     
     if (description != null && !description.isEmpty()) {
-      propertyTag.with(span("//" + description).withClass("comment"));
+        output.with(span("//" + description).withClass("comment"));
     }
 
     switch (classType){
         case MISSING:
-            propertyTag.withClass("missing");
+            output.withClass("missing");
             break;
         case INCREASED:
-            propertyTag.withClass("increased");
+            output.withClass("increased");
             break;
         default:
             break;
     }
-    output.with(propertyTag);
   }
 
   protected Schema resolve(Schema schema) {
