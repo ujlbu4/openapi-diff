@@ -1,3 +1,10 @@
+### [1.5.1](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.0...1.5.1) (2020-07-08)
+
+
+### Bug Fixes
+
+* print required and inner property fields ([0c715be](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/0c715beb6d6356141e698e6b591395650e9e81e4))
+
 ## [1.5.0](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.4.1...1.5.0) (2020-07-08)
 
 
