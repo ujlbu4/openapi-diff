@@ -381,11 +381,11 @@ public class MarkdownRender implements Render {
       boolean showContent,
       DiffContext context) {
     StringBuilder sb = new StringBuilder();
-    if (properties != null) {
+    if (properties != null && !properties.isEmpty()) {
       properties.forEach(
           (key, value) -> {
             sb.append(resolveProperty(deepness, value, key, title));
-            if (showContent) {
+            if (showContent && deepness < 7) {
               sb.append(schema(deepness + 1, resolve(value), context));
             }
           });
