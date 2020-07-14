@@ -1,3 +1,11 @@
+### [1.5.2](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.1...1.5.2) (2020-07-14)
+
+
+### Bug Fixes
+
+* fix null pointer exception when changedParam is null ([41d7719](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/41d77198ce00a2a36321f4793a1c0a16a34e4422))
+* hotfix for cyclyc param refs ([dc59d45](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/dc59d4546f1c14bd90bd0f35e33dacd32906721e))
+
 ### [1.5.1](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.0...1.5.1) (2020-07-08)
 
 
