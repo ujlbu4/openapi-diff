@@ -526,10 +526,10 @@ public class HtmlRender implements Render {
     Parameter rightParam = changeParam.getNewParameter();
     Parameter leftParam = changeParam.getNewParameter();
     ContainerTag li = li().withText(changeParam.getName() + " in " + changeParam.getIn());
-    if (changeRequired) {
+    if (changeParam.isChangeRequired()) {
       li.withText(" change into " + (rightParam.getRequired() ? "required" : "not required"));
     }
-    if (changeDescription) {
+    if (changeParam.getDescription() != null && changeParam.getDescription().isDifferent()) {
       li.withText(" Notes ")
           .with(del(leftParam.getDescription()).withClass("comment"))
           .withText(" change into ")
