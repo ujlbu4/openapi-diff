@@ -1,3 +1,10 @@
+### [1.5.3](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.2...1.5.3) (2020-07-16)
+
+
+### Bug Fixes
+
+* fix changing types of properties ([85e6c4a](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/85e6c4a818c21f304f5eb61ca80763436e3441d5))
+
 ### [1.5.2](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.1...1.5.2) (2020-07-14)
 
 
