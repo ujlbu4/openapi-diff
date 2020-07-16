@@ -315,9 +315,13 @@ public class HtmlRender implements Render {
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
     properties(output, ClassType.INCREASED, prefix, "Added property: ",
-               schema.getIncreasedProperties(), schema.getRequired().getIncreased(), schema.getContext());
+               schema.getIncreasedProperties(),
+               null == schema.getRequired() ? null : schema.getRequired().getIncreased(),
+               schema.getContext());
     properties(output, ClassType.MISSING, prefix, "Deleted property: ",
-               schema.getMissingProperties(), schema.getRequired().getMissing(), schema.getContext());
+               schema.getMissingProperties(),
+               null == schema.getRequired() ? null : schema.getRequired().getMissing(),
+               schema.getContext());
     
     listDiffs(output,"Updated enum values", schema.getEnumeration());
     

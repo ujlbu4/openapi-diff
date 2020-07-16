@@ -302,14 +302,14 @@ public class SchemaDiff extends ReferenceDiffCache<Schema, ChangedSchema> {
     left = resolveComposedSchema(leftComponents, left);
     right = resolveComposedSchema(rightComponents, right);
 
-//    // If type of schemas are different, just set old & new schema, set changedType to true in
-//    // SchemaDiffResult and
-//    // return the object
-//    if ((left == null || right == null)
-//        || !Objects.equals(left.getType(), right.getType())
-//        || !Objects.equals(left.getFormat(), right.getFormat())) {
-//      return getTypeChangedSchema(left, right, context);
-//    }
+    // If type of schemas are different, just set old & new schema, set changedType to true in
+    // SchemaDiffResult and
+    // return the object
+    if ((left == null || right == null)
+        || !Objects.equals(left.getType(), right.getType())
+        || !Objects.equals(left.getFormat(), right.getFormat())) {
+      return getTypeChangedSchema(left, right, context);
+    }
 
     // If schema type is same then get specific SchemaDiffResult and compare the properties
     SchemaDiffResult result = SchemaDiff.getSchemaDiffResult(right.getClass(), openApiDiff);
