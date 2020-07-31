@@ -1,3 +1,10 @@
+### [1.5.4](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.3...1.5.4) (2020-07-31)
+
+
+### Bug Fixes
+
+* fix mixed types ([ee7e8f8](https://gitlab.int.gofura.com/fura/misc/openapi-diff/commit/ee7e8f8849b6b1442f9460a8ff794755dada8146))
+
 ### [1.5.3](https://gitlab.int.gofura.com/fura/misc/openapi-diff/compare/1.5.2...1.5.3) (2020-07-16)
 
 
