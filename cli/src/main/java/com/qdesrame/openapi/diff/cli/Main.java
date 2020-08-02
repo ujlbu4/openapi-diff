@@ -159,21 +159,30 @@ public class Main {
         System.out.println(consoleRender.render(result));
       }
       if (line.hasOption("html")) {
-        HtmlRender htmlRender = new HtmlRender();
-        String output = htmlRender.render(result);
-        String outputFile = line.getOptionValue("html");
-        writeOutput(output, outputFile);
+          if (!result.isUnchanged()) {
+              // is changed
+              HtmlRender htmlRender = new HtmlRender();
+              String output = htmlRender.render(result);
+              String outputFile = line.getOptionValue("html");
+              writeOutput(output, outputFile);
+          }
       }
       if (line.hasOption("markdown")) {
-        MarkdownRender mdRender = new MarkdownRender();
-        String output = mdRender.render(result);
-        String outputFile = line.getOptionValue("markdown");
-        writeOutput(output, outputFile);
+          if (!result.isUnchanged()) {
+              // is changed
+              MarkdownRender mdRender = new MarkdownRender();
+              String output = mdRender.render(result);
+              String outputFile = line.getOptionValue("markdown");
+              writeOutput(output, outputFile);
+          }
       }
       if (line.hasOption("text")) {
-        String output = consoleRender.render(result);
-        String outputFile = line.getOptionValue("text");
-        writeOutput(output, outputFile);
+          if (!result.isUnchanged()) {
+              // is changed
+              String output = consoleRender.render(result);
+              String outputFile = line.getOptionValue("text");
+              writeOutput(output, outputFile);
+          }
       }
       if (line.hasOption("state")) {
         System.out.println(result.isChanged().getValue());

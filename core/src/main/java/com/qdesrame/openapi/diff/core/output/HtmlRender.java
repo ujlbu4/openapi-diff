@@ -11,20 +11,38 @@ import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import j2html.TagCreator;
 import j2html.tags.ContainerTag;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public class HtmlRender implements Render {
-
+  static final Logger logger = LoggerFactory.getLogger(HtmlRender.class);
+  
   private String title;
   private String linkCss;
   protected static RefPointer<Schema> refPointer = new RefPointer<>(RefType.SCHEMAS);
   protected ChangedOpenApi diff;
+  
+  private enum ClassType {
+      CHANGED,
+      INCREASED,
+      MISSING,
+      NO_CHANGE,
+  }
 
   public HtmlRender() {
-    this("Api Change Log", "http://deepoove.com/swagger-diff/stylesheets/demo.css");
+    //this("Api Change Log", "http://deepoove.com/swagger-diff/stylesheets/demo.css");
+      this("Api Change Log", "swagger_diff.css");
   }
 
   public HtmlRender(String title, String linkCss) {
@@ -35,6 +53,9 @@ public class HtmlRender implements Render {
   public String render(ChangedOpenApi diff) {
     this.diff = diff;
 
+    ChangedVersion changedVersion = diff.getChangedVersion();
+    ContainerTag ol_changedVersion = ol_changedVersion(changedVersion);
+    
     List<Endpoint> newEndpoints = diff.getNewEndpoints();
     ContainerTag ol_newEndpoint = ol_newEndpoint(newEndpoints);
 
@@ -47,11 +68,11 @@ public class HtmlRender implements Render {
     List<ChangedOperation> changedOperations = diff.getChangedOperations();
     ContainerTag ol_changed = ol_changed(changedOperations);
 
-    return renderHtml(ol_newEndpoint, ol_missingEndpoint, ol_deprecatedEndpoint, ol_changed);
+    return renderHtml(ol_changedVersion, ol_newEndpoint, ol_missingEndpoint, ol_deprecatedEndpoint, ol_changed);
   }
 
-  public String renderHtml(
-      ContainerTag ol_new, ContainerTag ol_miss, ContainerTag ol_deprec, ContainerTag ol_changed) {
+  public String renderHtml(ContainerTag ol_versions, ContainerTag ol_new, ContainerTag ol_miss,
+                           ContainerTag ol_deprec, ContainerTag ol_changed) {
     ContainerTag html =
         html()
             .attr("lang", "en")
@@ -60,21 +81,35 @@ public class HtmlRender implements Render {
                     .with(
                         meta().withCharset("utf-8"),
                         title(title),
-                        link().withRel("stylesheet").withHref(linkCss)),
+                        //link().withRel("stylesheet").withHref(linkCss)
+                        style(TagCreator.rawHtml(readFileToString(linkCss))).withType("text/css")
+                    ),
                 body()
                     .with(
                         header().with(h1(title)),
                         div()
                             .withClass("article")
                             .with(
-                                div().with(h2("What's New"), hr(), ol_new),
-                                div().with(h2("What's Deleted"), hr(), ol_miss),
-                                div().with(h2("What's Deprecated"), hr(), ol_deprec),
-                                div().with(h2("What's Changed"), hr(), ol_changed))));
+                                div().with(h2("Versions"), hr(), ol_versions),
+                                div().with(h2("New methods"), hr(), ol_new),
+                                div().with(h2("Deleted methods"), hr(), ol_miss),
+                                div().with(h2("Deprecated methods"), hr(), ol_deprec),
+                                div().with(h2("Changed methods"), hr(), ol_changed))));
 
     return document().render() + html.render();
   }
 
+  private ContainerTag ol_changedVersion(ChangedVersion changedVersion) {
+      if (null == changedVersion) return ol();
+      
+      ContainerTag ol = ol();
+      ol
+          .withText(String.format("Changed from %s to %s",
+                                changedVersion.getOldVersion(), changedVersion.getNewVersion()))
+          .withClass("version");
+      
+      return ol;
+  }
   private ContainerTag ol_newEndpoint(List<Endpoint> endpoints) {
     if (null == endpoints) return ol();
     ContainerTag ol = ol();
@@ -87,7 +122,10 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_newEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method)).withText(path + " ").with(span(desc));
+    return li()
+        .with(span(method).withClass(method))
+        .withText(path + " ")
+        .with(span(desc).withClass("comment"));
   }
 
   private ContainerTag ol_missingEndpoint(List<Endpoint> endpoints) {
@@ -102,7 +140,9 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_missingEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method), del().withText(path)).with(span(" " + desc));
+    return li()
+        .with(span(method).withClass(method), del().withText(path))
+        .with(span(" " + desc).withClass("comment"));
   }
 
   private ContainerTag ol_deprecatedEndpoint(List<Endpoint> endpoints) {
@@ -117,7 +157,9 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_deprecatedEndpoint(String method, String path, String desc) {
-    return li().with(span(method).withClass(method), del().withText(path)).with(span(" " + desc));
+    return li()
+        .with(span(method).withClass(method), del().withText(path))
+        .with(span(" " + desc).withClass("comment"));
   }
 
   private ContainerTag ol_changed(List<ChangedOperation> changedOperations) {
@@ -127,9 +169,8 @@ public class HtmlRender implements Render {
       String pathUrl = changedOperation.getPathUrl();
       String method = changedOperation.getHttpMethod().toString();
       String desc =
-          Optional.ofNullable(changedOperation.getSummary())
-              .map(ChangedMetadata::getRight)
-              .orElse("");
+            Optional.ofNullable(changedOperation.getNewOperation().getSummary())
+                .orElse("");
 
       ContainerTag ul_detail = ul().withClass("detail");
       if (result(changedOperation.getParameters()).isDifferent()) {
@@ -144,12 +185,13 @@ public class HtmlRender implements Render {
       }
       if (changedOperation.resultApiResponses().isDifferent()) {
         ul_detail.with(
-            li().with(h3("Response")).with(ul_response(changedOperation.getApiResponses())));
+            li().with(h3("Response"))
+                .with(ul_response(changedOperation.getApiResponses())));
       }
       ol.with(
           li().with(span(method).withClass(method))
               .withText(pathUrl + " ")
-              .with(span(desc))
+              .with(span(desc).withClass("comment"))
               .with(ul_detail));
     }
     return ol;
@@ -187,7 +229,8 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_changedResponse(String name, ChangedResponse response) {
-    return li().withText(String.format("Changed response : [%s]", name))
+    return li()
+        .withText(String.format("Changed response : [%s]", name))
         .with(
             span((null == response.getNewApiResponse()
                         || null == response.getNewApiResponse().getDescription())
@@ -222,18 +265,33 @@ public class HtmlRender implements Render {
   }
 
   private ContainerTag li_changedRequest(String name, ChangedMediaType request) {
+    ContainerTag innerBlock = ul();
     ContainerTag li =
         li().with(div_changedSchema(request.getSchema()))
-            .withText(String.format("Changed body: '%s'", name));
-    if (request.isIncompatible()) {
-      incompatibilities(li, request.getSchema());
+            .with(ul().withClass("change xxx")
+                      .with(li(String.format("Changed content type: '%s'", name))
+                                .with(innerBlock)));
+    if (request.isCompatible() || request.isIncompatible()) {
+      incompatibilities(innerBlock, request.getSchema());
     }
     return li;
   }
 
   private ContainerTag div_changedSchema(ChangedSchema schema) {
     ContainerTag div = div();
-    div.with(h3("Schema" + (schema.isIncompatible() ? " incompatible" : "")));
+    ContainerTag schemaTag = h3();
+    
+    if (schema.isIncompatible()) {
+        schemaTag.withText("Schema incompatible").withClass("incompatible");
+      }
+    else if (schema.isCompatible()) {
+        schemaTag.withText("Schema compatible").withClass("compatible");
+    }
+    else {
+        schemaTag.withText("Compatibility Unknown").withClass("compatibility-unknown");
+    }
+    div.with(schemaTag);
+    
     return div;
   }
 
@@ -243,19 +301,86 @@ public class HtmlRender implements Render {
 
   private void incompatibilities(
       final ContainerTag output, String propName, final ChangedSchema schema) {
+    
+    if (schema.getRequired() != null) {
+      required(output, ClassType.INCREASED, "New required properties", schema.getRequired().getIncreased());
+      required(output, ClassType.MISSING,"Properties deleted from required", schema.getRequired().getMissing());
+    }
     if (schema.getItems() != null) {
       items(output, propName, schema.getItems());
     }
     if (schema.isCoreChanged() == DiffResult.INCOMPATIBLE && schema.isChangedType()) {
       String type = type(schema.getOldSchema()) + " -> " + type(schema.getNewSchema());
-      property(output, propName, "Changed property type", type);
+      property(output, ClassType.CHANGED, propName, "Changed property type: ", type, null,"");
     }
     String prefix = propName.isEmpty() ? "" : propName + ".";
-    properties(
-        output, prefix, "Missing property", schema.getMissingProperties(), schema.getContext());
+    properties(output, ClassType.INCREASED, prefix, "Added property: ",
+               schema.getIncreasedProperties(),
+               null == schema.getRequired() ? null : schema.getRequired().getIncreased(),
+               schema.getContext());
+    properties(output, ClassType.MISSING, prefix, "Deleted property: ",
+               schema.getMissingProperties(),
+               null == schema.getRequired() ? null : schema.getRequired().getMissing(),
+               schema.getContext());
+    
+    listDiffs(output,"Updated enum values", schema.getEnumeration());
+    
     schema
         .getChangedProperties()
-        .forEach((name, property) -> incompatibilities(output, prefix + name, property));
+        .forEach(
+            (name, property) -> {
+                ContainerTag innerTag = ul();
+                output
+                    //.withClass("change yyy")
+                    .with(li(String.format("%s: %s", "Changed property", prefix + name))
+                              .withClass("changed")
+                              .with(innerTag));
+                incompatibilities(innerTag, prefix + name, property);
+            }
+        );
+  }
+  
+  private void required(ContainerTag output, ClassType classType, String title, List<String> required) {
+      if (required.size() > 0) {
+          ContainerTag innerTag = ul();
+          output.with(li(title).with(innerTag));
+          listItem(innerTag, classType, "", required);
+      }
+  }
+  private void listDiffs(ContainerTag output, String captionCategory, ChangedList<?> listDiff) {
+      if (listDiff == null || listDiff.isItemsChanged() == DiffResult.NO_CHANGES) {
+          return;
+      }
+      ContainerTag innerTag = ul();
+      output
+          .with(li(captionCategory).with(innerTag));
+      listItem(innerTag, ClassType.INCREASED, "Added: ", listDiff.getIncreased());
+      listItem(innerTag, ClassType.MISSING, "Deleted: ", listDiff.getMissing());
+  }
+  
+  private <T> void listItem(ContainerTag output, ClassType classType, String name, List<T> list) {
+      if (!list.isEmpty()) {
+          list.forEach(
+              value -> {
+                  ContainerTag propertyTag = li(String.format("%s%s", name, value));
+    
+                  switch (classType){
+                      case MISSING:
+                          propertyTag.withClass("missing");
+                          break;
+                      case INCREASED:
+                          propertyTag.withClass("increased");
+                          break;
+                      case CHANGED:
+                          propertyTag.withClass("changed");
+                      default:
+                          break;
+                  }
+                  
+                  output.with(propertyTag);
+              }
+          );
+      }
   }
 
   private void items(ContainerTag output, String propName, ChangedSchema schema) {
@@ -264,30 +389,70 @@ public class HtmlRender implements Render {
 
   private void properties(
       ContainerTag output,
+      ClassType classType,
       String propPrefix,
       String title,
       Map<String, Schema> properties,
+      List<String> requiredProperties,
       DiffContext context) {
-    if (properties != null) {
-      properties.forEach((key, value) -> resolveProperty(output, propPrefix, key, value, title));
+    if (!properties.isEmpty()) {
+      properties.forEach(
+          (key, value) -> {
+              Boolean isRequired = requiredProperties.contains(key);
+              resolveProperty(output, classType, propPrefix, key, value, title,
+                              isRequired);
+          }
+      );
     }
   }
 
   private void resolveProperty(
-      ContainerTag output, String propPrefix, String key, Schema value, String title) {
+      ContainerTag output, ClassType classType, String propPrefix, String key, Schema value, String title,
+      Boolean isRequired) {
     try {
-      property(output, propPrefix + key, title, resolve(value));
+      property(output, classType, propPrefix + key, title, isRequired, resolve(value));
     } catch (Exception e) {
-      property(output, propPrefix + key, title, type(value));
+      property(output, classType, propPrefix + key, title, type(value), isRequired,"");
     }
   }
 
-  protected void property(ContainerTag output, String name, String title, Schema schema) {
-    property(output, name, title, type(schema));
+  protected void property(ContainerTag output, ClassType classType, String name, String title,
+                          Boolean isRequired, Schema schema) {
+    ContainerTag propertyTag = li();
+    output.with(propertyTag);
+    property(propertyTag, classType, name, title, type(schema), isRequired, schema.getDescription());
+    
+    if (schema.getProperties() != null && !schema.getProperties().isEmpty()) {
+        ContainerTag innerTag = ul();
+        propertyTag.with(innerTag);
+        properties(innerTag, classType, "", "", schema.getProperties(),
+                   schema.getRequired(),null);
+    }
   }
 
-  protected void property(ContainerTag output, String name, String title, String type) {
-    output.with(p(String.format("%s: %s (%s)", title, name, type)).withClass("missing"));
+  protected void property(ContainerTag output, ClassType classType, String name, String title, String valueType,
+                          Boolean isRequired, String description) {
+    output.withText(String.format("%s%s (%s)", title, name, valueType));
+    
+    if (isRequired == Boolean.TRUE) {
+        output.with(span("[required]").withClass("required-property"));
+    } else if (isRequired == Boolean.FALSE) {
+        output.with(span("[optional]").withClass("optional-property"));
+    }
+    if (description != null && !description.isEmpty()) {
+        output.with(span("//" + description).withClass("comment"));
+    }
+
+    switch (classType){
+        case MISSING:
+            output.withClass("missing");
+            break;
+        case INCREASED:
+            output.withClass("increased");
+            break;
+        default:
+            break;
+    }
   }
 
   protected Schema resolve(Schema schema) {
@@ -365,10 +530,10 @@ public class HtmlRender implements Render {
     Parameter rightParam = changeParam.getNewParameter();
     Parameter leftParam = changeParam.getNewParameter();
     ContainerTag li = li().withText(changeParam.getName() + " in " + changeParam.getIn());
-    if (changeRequired) {
+    if (changeParam.isChangeRequired()) {
       li.withText(" change into " + (rightParam.getRequired() ? "required" : "not required"));
     }
-    if (changeDescription) {
+    if (changeParam.getDescription() != null && changeParam.getDescription().isDifferent()) {
       li.withText(" Notes ")
           .with(del(leftParam.getDescription()).withClass("comment"))
           .withText(" change into ")
@@ -376,4 +541,19 @@ public class HtmlRender implements Render {
     }
     return li;
   }
+    
+    private static String readFileToString(String fileName) {
+        logger.debug("Read file: {}", fileName);
+        try {
+            // https://stackoverflow.com/questions/20389255/reading-a-resource-file-from-within-jar
+            // As long as the file.txt resource is available on the classpath then this approach will work
+            // the same way regardless of whether the file.txt resource is in a classes/ directory
+            // or inside a jar
+            InputStream in = HtmlRender.class.getClassLoader().getResourceAsStream(fileName);
+            return IOUtils.toString(in);
+        } catch (IOException e) {
+            logger.error("Impossible to read file {}", fileName, e);
+            return "";
+        }
+    }
 }

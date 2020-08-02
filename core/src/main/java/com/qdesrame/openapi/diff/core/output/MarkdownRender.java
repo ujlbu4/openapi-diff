@@ -70,11 +70,13 @@ public class MarkdownRender implements Render {
   }
 
   protected String itemEndpoint(String method, String path, String summary) {
-    return H5 + CODE + method + CODE + " " + path + "\n\n" + metadata(summary) + "\n";
+    //return H5 + CODE + method + CODE + " " + path + "\n\n" + metadata(summary) + "\n";
+      return H5 + CODE + method + CODE + " " + path + " " + CODE + "//" + summary + CODE + "\n";
   }
 
   protected String itemEndpoint(String method, String path, ChangedMetadata summary) {
-    return H5 + CODE + method + CODE + " " + path + "\n\n" + metadata("summary", summary) + "\n";
+    //return H5 + CODE + method + CODE + " " + path + "\n\n" + metadata("summary", summary) + "\n";
+      return H5 + CODE + method + CODE + " " + path + " " + CODE + "//" + summary + CODE + "\n";
   }
 
   protected String titleH5(String title) {
@@ -161,7 +163,8 @@ public class MarkdownRender implements Render {
       status = HttpStatus.getStatusText(Integer.parseInt(code));
     }
     sb.append(format("%s : **%s %s**\n", title, code, status));
-    sb.append(metadata(description));
+    //sb.append(metadata(description));
+    sb.append(" " + CODE + "//" + description + CODE);
     return sb.toString();
   }
 
@@ -378,11 +381,11 @@ public class MarkdownRender implements Render {
       boolean showContent,
       DiffContext context) {
     StringBuilder sb = new StringBuilder();
-    if (properties != null) {
+    if (properties != null && !properties.isEmpty()) {
       properties.forEach(
           (key, value) -> {
             sb.append(resolveProperty(deepness, value, key, title));
-            if (showContent) {
+            if (showContent && deepness < 7) {
               sb.append(schema(deepness + 1, resolve(value), context));
             }
           });
@@ -417,8 +420,8 @@ public class MarkdownRender implements Render {
   protected String property(
       int deepness, String title, String name, String type, String description) {
     return format(
-        "%s* %s `%s` (%s)\n%s\n",
-        indent(deepness), title, name, type, metadata(indent(deepness + 1), description));
+        "%s* %s `%s` (%s) //`%s`\n\n",
+        indent(deepness), title, name, type, description);
   }
 
   protected String listDiff(int deepness, String name, ChangedList<?> listDiff) {

@@ -46,8 +46,12 @@ public class ComposedSchemaDiffResult extends SchemaDiffResult {
             || rightDis == null
             || leftDis.getPropertyName() == null
             || rightDis.getPropertyName() == null) {
-          throw new IllegalArgumentException(
-              "discriminator or property not found for oneOf schema");
+//          throw new IllegalArgumentException(
+//              "discriminator or property not found for oneOf schema");
+            // todo: log WARNING
+            // todo: properly handle case when oneOf is for mixed types:
+            // https://swagger.io/docs/specification/data-models/data-types/
+            return Optional.empty();
         } else if (!leftDis.getPropertyName().equals(rightDis.getPropertyName())
             || (CollectionUtils.isEmpty(leftComposedSchema.getOneOf())
                 || CollectionUtils.isEmpty(rightComposedSchema.getOneOf()))) {
