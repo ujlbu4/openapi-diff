@@ -7,7 +7,7 @@ tagFormat: '${version}'
 # Global plugin options (will be passed to all plugins)
 preset: 'conventionalcommits'
 gitlabUrl: 'http://gitlab.int.gofura.com/'
-slackWebhook: 'https://hooks.slack.com/services/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'
+slackWebhook: 'https://mattermost.gofura.com/hooks/q3dtkec6yjyg9x6616o3atgkkr'
 
 # Responsible for verifying conditions necessary to proceed with the release:
 # configuration is correct, authentication token are valid, etc...
@@ -59,7 +59,15 @@ publish:
 success:
   - path: 'semantic-release-slack-bot'
     notifyOnSuccess: true
-    markdownReleaseNotes: true
+    markdownReleaseNotes: false
+    onSuccessTemplate:
+      channel: 'alerts_backend_release'
+      attachments:
+        - color: '#00c100'
+          title: '$package_name'
+          title_link: '$repo_url'
+          text: '$release_notes'
+          footer: 'version: $npm_package_version'
 
 fail:
   - path: 'semantic-release-slack-bot'
