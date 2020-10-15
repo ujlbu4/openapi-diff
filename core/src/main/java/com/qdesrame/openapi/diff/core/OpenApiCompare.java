@@ -4,6 +4,7 @@ import com.qdesrame.openapi.diff.core.compare.OpenApiDiff;
 import com.qdesrame.openapi.diff.core.model.ChangedOpenApi;
 import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.parser.core.models.AuthorizationValue;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import java.io.File;
@@ -98,6 +99,10 @@ public class OpenApiCompare {
    * @return Comparison result
    */
   public static ChangedOpenApi fromSpecifications(OpenAPI oldSpec, OpenAPI newSpec) {
+    if (oldSpec == null) {
+      // in cases it is first release, so old spec is not exist yet
+      oldSpec = new OpenAPI().info(new Info());
+    }
     return OpenApiDiff.compare(notNull(oldSpec, "old"), notNull(newSpec, "new"));
   }
 
